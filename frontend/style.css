@@ -1,0 +1,19 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+form {
+    margin-bottom: 1em;
+}
+
+input {
+    margin-right: 0.5em;
+}
+
+li {
+    margin-bottom: 0.5em;
+}
+
+button {
+    margin-left: 0.5em;
+}
