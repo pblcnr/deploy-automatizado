@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build da imagem
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest ./backend
+
+      - name: Push da imagem
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest
+
+      - name: Copiar arquivos para o servidor
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "~/deploy-automatizado"
+
+      - name: Deploy remoto via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/deploy-automatizado
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest
+            docker stop app || true
+            docker rm app || true
+            docker-compose up -d
+
+      # SonarQube
+      - name: Rodar SonarQube Scanner
+        run: |
+          docker run -d --name sonarqube -p 9000:9000 sonarqube:community
+          sleep 60
+          sonar-scanner \
+            -Dsonar.projectKey=deploy-automatizado \
+            -Dsonar.sources=./backend/src \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          docker stop sonarqube
+          docker rm sonarqube
