@@ -11,7 +11,7 @@ services:
     networks:
       - appnet
   backend:
-    build: plbcnr/deploy-automatizado:latest
+    image: plbcnr/deploy-automatizado:latest
     environment:
       - DB_HOST=db
       - DB_PORT=5432
