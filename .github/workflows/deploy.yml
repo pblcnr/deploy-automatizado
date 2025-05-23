@@ -20,7 +20,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build da imagem
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest ./backend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest -f backend/Dockerfile .
 
       - name: Push da imagem
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest
@@ -32,15 +32,6 @@ jobs:
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "docker-compose.yml"
-          target: "~/deploy-automatizado"
-
-      - name: Copiar frontend para o servidor
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "frontend"
           target: "~/deploy-automatizado"
 
       - name: Deploy remoto e análise SonarQube

@@ -1,6 +1,7 @@
 FROM node:20
 WORKDIR /app
-COPY package*.json ./
+COPY backend/package*.json ./
 RUN npm install
-COPY . .
-CMD ["npm", "start"]
+COPY backend/ ./
+COPY frontend/ ./frontend/
+CMD ["node", "src/app.js"]

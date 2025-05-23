@@ -13,7 +13,7 @@ app.use(express.json());
 app.use("/users", userRoutes);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 const PORT = 3000;
 
