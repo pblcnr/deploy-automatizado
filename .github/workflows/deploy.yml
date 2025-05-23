@@ -34,6 +34,15 @@ jobs:
           source: "docker-compose.yml"
           target: "~/deploy-automatizado"
 
+      - name: Copiar frontend para o servidor
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "frontend"
+          target: "~/deploy-automatizado"
+
       - name: Deploy remoto e análise SonarQube
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -43,7 +52,7 @@ jobs:
           script: |
             cd ~/deploy-automatizado
 
-            # Baixa e instala o Sonar Scanner CLI
+            # Instala Sonar Scanner CLI
             sudo apt-get update
             sudo apt-get install -y unzip openjdk-17-jre wget
             wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
