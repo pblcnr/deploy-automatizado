@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: crud_db
     ports:
-      - "5433:5432"
+      - "8189:5432"
     networks:
       - appnet
   backend:
@@ -19,7 +19,7 @@ services:
       - DB_PASS=postgres
       - DB_NAME=crud_db
     ports:
-      - "3000:3000"
+      - "8188:3000"
     depends_on:
       - db
     networks:

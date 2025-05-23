@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const api = 'http://localhost:3000/users';
+  const api = 'http://localhost:8188/users';
 
   async function fetchUsers() {
     const res = await fetch(api);
