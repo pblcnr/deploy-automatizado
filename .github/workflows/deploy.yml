@@ -34,7 +34,7 @@ jobs:
           source: "docker-compose.yml"
           target: "~/deploy-automatizado"
 
-      - name: Deploy remoto e análise SonarQube
+      - name: Deploy remoto
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 201.23.3.86
@@ -42,31 +42,16 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/deploy-automatizado
-
-            # Instala Sonar Scanner CLI
-            sudo apt-get update
-            sudo apt-get install -y unzip openjdk-17-jre wget
-            wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-            unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
-            sudo mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
-            export PATH=$PATH:/opt/sonar-scanner/bin
-
-            # Sobe o SonarQube em container
-            docker run -d --name sonarqube -p 9000:9000 sonarqube:community
-            sleep 60
-
-            # Executa a análise
-            /opt/sonar-scanner/bin/sonar-scanner \
-              -Dsonar.projectKey=deploy-automatizado \
-              -Dsonar.sources=./backend/src \
-              -Dsonar.host.url=http://localhost:9000 \
-              -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-
-            # Para e remove o SonarQube
-            docker stop sonarqube
-            docker rm sonarqube
-
-            # Faz o deploy da aplicação
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest
             docker compose down || true
             docker compose up -d
+
+      - name: Verificar logs do backend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker ps -a
+            docker logs $(docker ps -aqf "name=backend")
