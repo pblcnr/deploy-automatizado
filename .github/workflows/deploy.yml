@@ -39,8 +39,8 @@ jobs:
 
       - name: Aguarda SonarQube iniciar
         run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:9000 > /dev/null; then
+          for i in {1..60}; do
+            if curl -s http://localhost:9000/api/system/status | grep -q '"status":"UP"'; then
               echo "SonarQube está pronto!"
               break
             fi
