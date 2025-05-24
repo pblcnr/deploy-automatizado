@@ -34,6 +34,39 @@ jobs:
           source: "docker-compose.yml"
           target: "~/deploy-automatizado"
 
+      - name: Subir SonarQube em container
+        run: docker run -d --name sonarqube -p 9000:9000 sonarqube:community
+
+      - name: Aguarda SonarQube iniciar
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:9000 > /dev/null; then
+              echo "SonarQube está pronto!"
+              break
+            fi
+            echo "Aguardando SonarQube subir..."
+            sleep 5
+          done
+
+      - name: Instalar Sonar Scanner
+        run: |
+          wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
+          export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
+
+      - name: SonarQube Scan
+        run: |
+          ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+            -Dsonar.projectKey=deploy-automatizado \
+            -Dsonar.sources=./backend \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      - name: Remover container SonarQube
+        run: |
+          docker stop sonarqube
+          docker rm sonarqube    
+
       - name: Deploy remoto
         uses: appleboy/ssh-action@v1.0.3
         with:
