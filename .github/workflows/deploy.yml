@@ -43,16 +43,14 @@ jobs:
           source: "backend"
           target: "~/deploy-automatizado"
 
-      - name: Instalar Sonar Scanner no servidor remoto
+      - name: Instalar Sonar Scanner via npm no servidor remoto
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 201.23.3.86
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/deploy-automatizado
-            wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-            unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
+            npm install -g sonar-scanner
 
       - name: Subir SonarQube em container no servidor remoto
         uses: appleboy/ssh-action@v1.0.3
@@ -87,7 +85,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/deploy-automatizado
-            ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+            sonar-scanner \
               -Dsonar.projectKey=deploy-automatizado \
               -Dsonar.sources=./backend \
               -Dsonar.host.url=http://localhost:9000 \
