@@ -43,15 +43,32 @@ jobs:
           source: "backend"
           target: "~/deploy-automatizado"
 
-      - name: Instalar Sonar Scanner no servidor remoto
+      # Baixar e descompactar o Sonar Scanner no runner do Actions
+      - name: Baixar e descompactar Sonar Scanner
+        run: |
+          wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
+
+      # Copiar Sonar Scanner para o servidor remoto
+      - name: Copiar Sonar Scanner para o servidor
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "sonar-scanner-5.0.1.3006-linux"
+          target: "~/deploy-automatizado"
+
+      # Baixar jq no home do usuário (sem sudo)
+      - name: Baixar jq no servidor remoto (sem sudo)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 201.23.3.86
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-            unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip || true
+            wget -O ~/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod +x ~/jq
 
       - name: Subir SonarQube em container no servidor remoto (porta 8190)
         uses: appleboy/ssh-action@v1.0.3
@@ -86,7 +103,7 @@ jobs:
           SONAR_USER: admin
           SONAR_PASS: admin
         run: |
-          SONAR_TOKEN=$(ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 "curl -s -u \"$SONAR_USER:$SONAR_PASS\" -X POST 'http://localhost:8190/api/user_tokens/generate?name=ci-token' | jq -r .token")
+          SONAR_TOKEN=$(ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 "curl -s -u \"$SONAR_USER:$SONAR_PASS\" -X POST 'http://localhost:8190/api/user_tokens/generate?name=ci-token' | ~/jq -r .token")
           echo "::add-mask::$SONAR_TOKEN"
           echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
 
