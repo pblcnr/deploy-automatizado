@@ -34,7 +34,7 @@ jobs:
           source: "docker-compose.yml"
           target: "~/deploy-automatizado"
 
-      - name: Copiar código para o servidor (para análise SonarQube)
+      - name: Copiar código para o servidor
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 201.23.3.86
@@ -42,96 +42,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "backend"
           target: "~/deploy-automatizado"
-
-      # Baixar e descompactar o Sonar Scanner no runner do Actions
-      - name: Baixar e descompactar Sonar Scanner
-        run: |
-          wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
-
-      # Copiar Sonar Scanner para o servidor remoto
-      - name: Copiar Sonar Scanner para o servidor
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "sonar-scanner-5.0.1.3006-linux"
-          target: "~/deploy-automatizado"
-
-      # Baixar jq no home do usuário (sem sudo)
-      - name: Baixar jq no servidor remoto (sem sudo)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            wget -O ~/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-            chmod +x ~/jq
-
-      - name: Subir SonarQube em container no servidor remoto (porta 8190)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker stop sonarqube_temp || true
-            docker rm sonarqube_temp || true
-            docker run -d --name sonarqube_temp -p 8190:9000 sonarqube:community
-
-      - name: Aguarda SonarQube iniciar no servidor remoto
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            for i in {1..60}; do
-              if curl -s http://localhost:8190/api/system/status | grep -q '"status":"UP"'; then
-                echo "SonarQube está pronto!"
-                break
-              fi
-              echo "Aguardando SonarQube subir..."
-              sleep 5
-            done
-
-      - name: Criar token do admin via API REST
-        id: get_sonar_token
-        env:
-          SONAR_USER: admin
-          SONAR_PASS: admin
-        run: |
-          SONAR_TOKEN=$(ssh -o StrictHostKeyChecking=no aluno@201.23.3.86 "curl -s -u \"$SONAR_USER:$SONAR_PASS\" -X POST 'http://localhost:8190/api/user_tokens/generate?name=ci-token' | ~/jq -r .token")
-          echo "::add-mask::$SONAR_TOKEN"
-          echo "SONAR_TOKEN=$SONAR_TOKEN" >> $GITHUB_ENV
-
-      - name: Rodar Sonar Scanner no servidor remoto
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/deploy-automatizado
-            ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
-              -Dsonar.projectKey=deploy-automatizado \
-              -Dsonar.sources=./backend \
-              -Dsonar.host.url=http://localhost:8190 \
-              -Dsonar.login=$SONAR_TOKEN
-
-      - name: Remover container SonarQube do servidor remoto
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker stop sonarqube_temp
-            docker rm sonarqube_temp
 
       - name: Deploy remoto
         uses: appleboy/ssh-action@v1.0.3
