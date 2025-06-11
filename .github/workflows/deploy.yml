@@ -63,4 +63,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker ps -a
-            docker logs $(docker ps -aqf "name=backend")
+            docker logs $(docker ps -aqf "name=deploy-automatizado-backend | head -n 1")
