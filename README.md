@@ -81,7 +81,7 @@ http://201.23.3.86:8188
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/SEU_USUARIO/deploy-automatizado.git
+   git clone https://github.com/pblcnr/deploy-automatizado.git
    cd deploy-automatizado
    ```
 

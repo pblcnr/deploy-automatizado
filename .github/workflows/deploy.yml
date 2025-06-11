@@ -54,13 +54,3 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/deploy-automatizado:latest
             docker compose down || true
             docker compose up -d
-
-      - name: Verificar logs do backend
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker ps -a
-            docker logs $(docker ps -aqf "name=deploy-automatizado-backend | head -n 1")
