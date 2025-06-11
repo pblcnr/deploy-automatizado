@@ -34,38 +34,14 @@ jobs:
           source: "docker-compose.yml"
           target: "~/deploy-automatizado"
 
-      # --- Análise SonarQube no próprio Actions ---
-      - name: Subir SonarQube em container
-        run: docker run -d --name sonarqube -p 9000:9000 sonarqube:community
-
-      - name: Aguarda SonarQube iniciar
-        run: |
-          for i in {1..60}; do
-            if curl -s http://localhost:9000/api/system/status | grep -q '"status":"UP"'; then
-              echo "SonarQube está pronto!"
-              break
-            fi
-            echo "Aguardando SonarQube subir..."
-            sleep 5
-          done
-
-      - name: Instalar Sonar Scanner
-        run: |
-          wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
-
-      - name: SonarQube Scan
-        run: |
-          ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
-            -Dsonar.projectKey=deploy-automatizado \
-            -Dsonar.sources=./backend \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-
-      - name: Remover container SonarQube
-        run: |
-          docker stop sonarqube
-          docker rm sonarqube    
+      # --- Análise SonarCloud ---
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: ./backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: "https://sonarcloud.io"
 
       # --- Deploy remoto ---
       - name: Deploy remoto
