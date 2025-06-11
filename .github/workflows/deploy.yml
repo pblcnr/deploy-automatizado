@@ -52,7 +52,6 @@ jobs:
         run: |
           wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
-          export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
 
       - name: SonarQube Scan
         run: |
